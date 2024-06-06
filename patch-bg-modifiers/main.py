@@ -1,5 +1,13 @@
 import pandas as pd
 import sqlite3
+import os
+
+def parse_audio_path(audio_path):
+    parts = audio_path.split(os.path.sep)
+    last_two_folders_and_file = parts[-2:]
+    result_path = os.path.join(*last_two_folders_and_file)
+    return result_path
+
 
 # Define the paths to the CSV file and the SQLite database
 csv_file_path = 'output_file.csv'
@@ -18,15 +26,16 @@ cursor = conn.cursor()
 
 # Iterate over the DataFrame and update the database
 for index, row in df.iterrows():
-    audio_path = row[audio_path_col]
+    audio_path = parse_audio_path(row[audio_path_col])
     modifier_id = row[modifier_id_col]
 
     # Update the database where the Audio_Path matches
     cursor.execute("""
-        UPDATE Audio_Data
-        SET Background_Modifier_ID = ?
-        WHERE Audio_Path = ?
-    """, (modifier_id, audio_path))
+    UPDATE Audio_Data
+    SET Background_Modifier_ID = ?
+    WHERE Audio_Path LIKE ?
+    """, (modifier_id, f'%{audio_path}%'))
+
 
     print(audio_path)
 
